@@ -36,6 +36,25 @@ module Jekyll
 			return body.inner_html
 		end
 		
+		def is_blank(doc)
+			if doc.is_a?(Nokogiri::XML::Text)
+				if doc.content.strip().length == 0
+					return true
+				end
+			end
+			
+			if doc.children.length == 0
+				return true
+			end
+			
+			doc.children.each do |child|
+				if !is_blank(child)
+					return false
+				end
+			end
+			return true
+		end
+		
 		def smart_truncate_doc(doc, num_words)
 			if doc.is_a?(Nokogiri::XML::Text)
 				if num_words > 0
@@ -61,14 +80,14 @@ module Jekyll
 				return smart_truncate_table(doc, num_words)
 			else
 				if num_words > 0
-					children_orig = doc.children.length
+					was_blank = is_blank(doc)
 					
 					count = 0
 					doc.children.each do |child|
 						count += smart_truncate_doc(child, num_words - count)
 					end
 					
-					if doc.children.length == 0 && children_orig != 0
+					if is_blank(doc) && !was_blank
 						doc.remove()
 					end
 					
@@ -95,16 +114,23 @@ module Jekyll
 					return count
 				end
 			else
-				count = 0
-				doc.children.each do |child|
-					count += smart_truncate_table(child, num_words - count)
-				end
-				
-				if doc.children.length == 0
+				if num_words > 0
+					was_blank = is_blank(doc)
+					
+					count = 0
+					doc.children.each do |child|
+						count += smart_truncate_table(child, num_words - count)
+					end
+					
+					if is_blank(doc) && !was_blank
+						doc.remove()
+					end
+					
+					return count
+				else
 					doc.remove()
+					return 0
 				end
-				
-				return count
 			end
 		end
 	end
