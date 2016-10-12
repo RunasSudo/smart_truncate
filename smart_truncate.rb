@@ -1,3 +1,4 @@
+# coding: utf-8
 #    smart_truncate: A HTML-aware word-truncating filter for Jekyll/Liquid
 #    Copyright © 2016  RunasSudo (Yingtong Li)
 #
@@ -59,16 +60,23 @@ module Jekyll
 			elsif doc.name == 'table'
 				return smart_truncate_table(doc, num_words)
 			else
-				count = 0
-				doc.children.each do |child|
-					count += smart_truncate_doc(child, num_words - count)
-				end
-				
-				if doc.children.length == 0
+				if num_words > 0
+					children_orig = doc.children.length
+					
+					count = 0
+					doc.children.each do |child|
+						count += smart_truncate_doc(child, num_words - count)
+					end
+					
+					if doc.children.length == 0 && children_orig != 0
+						doc.remove()
+					end
+					
+					return count
+				else
 					doc.remove()
+					return 0
 				end
-				
-				return count
 			end
 		end
 		
