@@ -23,14 +23,16 @@ module Jekyll
 	module SmartTruncate
 		def smart_truncate(input, num_words=100, after='...')
 			doc = Nokogiri::HTML(input)
-			smart_truncate_doc(doc, num_words)
+			words = smart_truncate_doc(doc, num_words)
 			
 			body = doc.root.children.first
 			
-			if body.children.last.name == 'p' || body.children.last.name == 'div' || body.children.last.name == 'span'
-				body.children.last.inner_html += after
-			else
-				body << after
+			if words >= num_words
+				if body.children.last.name == 'p' || body.children.last.name == 'div' || body.children.last.name == 'span'
+					body.children.last.inner_html += after
+				else
+					body << after
+				end
 			end
 			
 			return body.inner_html
